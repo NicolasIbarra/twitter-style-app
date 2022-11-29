@@ -3,17 +3,32 @@ const MONGOOSE = require("mongoose");
 const gql = require("graphql-tag");
 
 const { MONGODB } = require("./config.js");
+const POST = require("./models/Post.js");
+const USER = require("./models/User.js");
 
 /** GraphQL actions */
 const TYPEDEFS = gql`
+  type Post {
+    id: ID!
+    body: String!
+    userName: String!
+    createdAt: String!
+  }
   type Query {
-    sayHi: String!
+    getPosts: [Post]
   }
 `;
 /** GraphQL actions code to execute */
 const RESOLVERS = {
   Query: {
-    sayHi: () => "This is my first resolver!",
+    async getPosts() {
+      try {
+        const POSTS = await POST.find();
+        return POSTS;
+      } catch (error) {
+        throw new Error(error);
+      }
+    },
   },
 };
 /** Setting up Apollo server */
