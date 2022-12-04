@@ -1,7 +1,8 @@
-const BCRYPT = require("./bcrypt");
-const JWT = require("./jsonwebtoken");
+const BCRYPT = require("bcryptjs");
+const JWT = require("jsonwebtoken");
 
 const USERSMODEL = require("../../models/User");
+const { SECRET_KEY } = require("../../config");
 
 module.exports = {
   Mutation: {
@@ -9,25 +10,38 @@ module.exports = {
     // The second param refers to the registerInput param from the typeDefs call.
     // Info param refers to some metadata.
     async registerUser(parent, { registerInput }, context, info) {
-      try {
-        const { userName, password, confirmPassword, email } = registerInput;
+      let { userName, password, confirmPassword, email } = registerInput;
 
-        // Hashing password. We need bcryptjs package.
-        password = await BCRYPT.hash(password, 12);
-        const NEWUSER = new USERSMODEL({
-            userName,
-            email,
-            password,
-            createdAt: new Date().toISOString()
-        })
-        const RES = NEWUSER.save();
-        
-        // Creating auth token. We need jsonwebtoken package.
+      // Hashing password. We need bcryptjs package.
+      password = await BCRYPT.hash(password, 12);
+      const NEWUSER = new USERSMODEL({
+        userName,
+        email,
+        password,
+        createdAt: new Date().toISOString(),
+      });
+      const RES = await NEWUSER.save();
 
-        
-      } catch (error) {
-        throw new Error("Error in registerUser resolver: ", error);
-      }
+      // Creating auth token. We need jsonwebtoken package.
+      const token = JWT.sign(
+        {
+          id: RES.id,
+          userName: RES.userName,
+          email: RES.email,
+        },
+        SECRET_KEY,
+        { expiresIn: "1h" }
+      );
+
+      return {
+        ...RES._doc,
+        id: RES._id,
+        token,
+      };
     },
   },
 };
+
+// function HashPassword(userName, password, confirmPassword, email){
+
+// }

@@ -29,6 +29,6 @@ module.exports = gql`
   # This type is for making changes in the database
   type Mutation {
     # This is a register function with a registerInput param of type RegisterInput and a return value of type User
-    register(registerInput: RegisterInput): User!
+    registerUser(registerInput: RegisterInput): User!
   }
 `;
