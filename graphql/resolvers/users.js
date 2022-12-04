@@ -13,6 +13,14 @@ module.exports = {
         const { userName, password, confirmPassword, email } = registerInput;
 
         // Hashing password. We need bcryptjs package.
+        password = await BCRYPT.hash(password, 12);
+        const NEWUSER = new USERSMODEL({
+            userName,
+            email,
+            password,
+            createdAt: new Date().toISOString()
+        })
+        const RES = NEWUSER.save();
         
         // Creating auth token. We need jsonwebtoken package.
 
