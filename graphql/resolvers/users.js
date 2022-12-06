@@ -3,7 +3,7 @@ const JWT = require("jsonwebtoken");
 
 const USERSMODEL = require("../../models/User");
 const { SECRET_KEY } = require("../../config");
-const { ValidateUsername, ValidateEmail } = require("../../util/Validators");
+const { ValidateUsername, ValidateEmail, ValidatePassword } = require("../../util/Validators");
 
 module.exports = {
   Mutation: {
@@ -11,13 +11,12 @@ module.exports = {
     // The second param refers to the registerInput param from the typeDefs call.
     async RegisterUser(parent, { registerInput }) {
       let { userName, password, confirmPassword, email } = registerInput;
-      // Verify the userName and email are not taken
-      await ValidateUsername(userName);
-      await ValidateEmail(email);
+      // Validate user info
+      await ValidateUserInputs(userName, password, confirmPassword, email);
       // Hashing password. We need bcryptjs package.
       password = await HashPassword(password);
       // Instantiate a new user.
-      const USER = InstantiateNewUser(registerInput);
+      const USER = InstantiateNewUser(userName, password, email);
       // Saving the new user in the database.
       const RESPONSE = await USER.save();
       // Creating auth token. We need jsonwebtoken package.
@@ -34,8 +33,7 @@ module.exports = {
 
 const HashPassword = async password => await BCRYPT.hash(password, 12);
 
-const InstantiateNewUser = registerInput => {
-  let { userName, password, email } = registerInput;
+const InstantiateNewUser = (userName, password, email) => {
   const NEWUSER = new USERSMODEL({
     userName,
     email,
@@ -56,4 +54,10 @@ const CreateToken = RESPONSE => {
     { expiresIn: "1h" }
   );
   return token;
+}
+
+const ValidateUserInputs = async (userName, password, confirmPassword, email) => {
+  await ValidateUsername(userName);
+  ValidatePassword(password, confirmPassword);
+  await ValidateEmail(email);
 }
