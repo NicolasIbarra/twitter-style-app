@@ -1,9 +1,10 @@
+const BCRYPT = require("bcryptjs");
 const { UserInputError } = require("apollo-server");
 const USERSMODEL = require("../models/User");
 
-module.exports.ValidateUsername = async (userName) => {
+module.exports.ValidateRegistrationUsername = async (userName, action) => {
   ValidateEmptyUsername(userName);
-  await ValidateExistingUsername(userName);
+  await ValidateExistingUsername(userName, action);
 };
 
 module.exports.ValidateEmail = async (email) => {
@@ -17,14 +18,49 @@ module.exports.ValidatePassword = (password, confirmPassword) => {
   ValidateSamePassword(password, confirmPassword);
 };
 
-const ValidateExistingUsername = async (userName) => {
+module.exports.ValidateLoginUsername = async (userName, action) => {
+  ValidateEmptyUsername(userName);
+  await ValidateExistingUsername(userName, action);
+}
+
+module.exports.ValidateLoginPassword = async (userName, password) => {
+  ValidateEmptyPassword(password);
+  return await CompareLoginPassword(userName, password);
+}
+
+const CompareLoginPassword = async (userName, password) => {
+  const user = await USERSMODEL.findOne({ userName });
+  const match = ( password === user.password ) ? true : false ;
+  
+  if (!match) {
+    throw new UserInputError("Incorrect password", {
+      error: {
+        password: "The password is incorrect",
+      }
+    })
+  }
+  return user;
+}
+
+const ValidateExistingUsername = async (userName, action) => {
   const existsUser = await USERSMODEL.findOne({ userName });
+  if (action === "register") {
   if (existsUser) {
     throw new UserInputError("Username already taken", {
       error: {
         userName: "This username is already taken. Please choose another",
       },
     });
+    }
+  }
+  if (action === "login") {
+    if (!existsUser) {
+      throw new UserInputError("Username not found", {
+        error: {
+          userName: "The entered username does not exists"
+        }
+      })
+    }
   }
 };
 

@@ -3,7 +3,13 @@ const JWT = require("jsonwebtoken");
 
 const USERSMODEL = require("../../models/User");
 const { SECRET_KEY } = require("../../config");
-const { ValidateUsername, ValidateEmail, ValidatePassword } = require("../../util/Validators");
+const { 
+  ValidateRegistrationUsername,
+  ValidateLoginUsername,
+  ValidateLoginPassword,
+  ValidatePassword, 
+  ValidateEmail 
+} = require("../../util/Validators");
 
 module.exports = {
   Mutation: {
@@ -12,7 +18,9 @@ module.exports = {
     async RegisterUser(parent, { registerInput }) {
       let { userName, password, confirmPassword, email } = registerInput;
       // Validate user info
-      await ValidateUserInputs(userName, password, confirmPassword, email);
+      await ValidateRegistrationUsername(userName, "register");
+      ValidatePassword(password, confirmPassword);
+      await ValidateEmail(email);
       // Hashing password. We need bcryptjs package.
       password = await HashPassword(password);
       // Instantiate a new user.
@@ -28,11 +36,21 @@ module.exports = {
         token,
       };
     },
+    
+    async LoginUser(parent, {userName, password}) {
+      await ValidateLoginUsername(userName, "login");
+      const user = await ValidateLoginPassword(userName, password);
+      const token = CreateToken(user);
+      return {
+        ...user._doc,
+        id: user._id,
+        token,
+      };
+    }
   },
 };
 
 const HashPassword = async password => await BCRYPT.hash(password, 12);
-
 const InstantiateNewUser = (userName, password, email) => {
   const NEWUSER = new USERSMODEL({
     userName,
@@ -42,7 +60,6 @@ const InstantiateNewUser = (userName, password, email) => {
   });
   return NEWUSER;
 }
-
 const CreateToken = RESPONSE => {
   const token = JWT.sign(
     {
@@ -54,10 +71,4 @@ const CreateToken = RESPONSE => {
     { expiresIn: "1h" }
   );
   return token;
-}
-
-const ValidateUserInputs = async (userName, password, confirmPassword, email) => {
-  await ValidateUsername(userName);
-  ValidatePassword(password, confirmPassword);
-  await ValidateEmail(email);
 }
