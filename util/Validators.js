@@ -45,12 +45,12 @@ const CompareLoginPassword = async (userName, password) => {
 const ValidateExistingUsername = async (userName, action) => {
   const existsUser = await USERSMODEL.findOne({ userName });
   if (action === "register") {
-  if (existsUser) {
-    throw new UserInputError("Username already taken", {
-      error: {
-        userName: "This username is already taken. Please choose another",
-      },
-    });
+    if (existsUser) {
+      throw new UserInputError("Username already taken", {
+        error: {
+          userName: "This username is already taken. Please choose another",
+        },
+      });
     }
   }
   if (action === "login") {

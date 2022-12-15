@@ -24,7 +24,8 @@ module.exports = gql`
   }
   # This type is for getting info from the database
   type Query {
-    getPosts: [Post]
+    getPosts: [Post],
+    getPost(id: ID!): Post! 
   }
   # This type is for making changes in the database
   type Mutation {

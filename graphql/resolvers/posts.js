@@ -10,5 +10,12 @@ module.exports = {
         throw new Error("Error in getPosts resolver: ", error);
       }
     },
+    async getPost(parent, { id }) {
+      try {
+        return await POSTSMODEL.findById(id);
+      } catch (error) {
+        throw new Error ("Post not found", error);
+      }
+    }
   },
 };
